@@ -1,9 +1,11 @@
-package main
+package models
 
 import (
 	"context"
 	"log"
 	"time"
+
+	"../data"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Coach stuff
+// Coach - IYWT Employee
 type Coach struct {
 	ID                 primitive.ObjectID `bson:"_id"`
 	CreatedOn          time.Time          `json:"CreatedOn"`
@@ -26,9 +28,10 @@ type Coach struct {
 	CountryAssignments []string           `json:"CountryAssignments"`
 }
 
-func (c Coach) getAll(collection string) []*Coach {
+// GetAll - Gets all documents for the collection
+func (c Coach) GetAll(collection string) []*Coach {
 	var results []*Coach
-	cur := getAllCursor(collection)
+	cur := data.GetAllCursor(collection)
 
 	// Loop Cursor
 	for cur.Next(context.TODO()) {
@@ -51,16 +54,18 @@ func (c Coach) getAll(collection string) []*Coach {
 	return results
 }
 
-func (c Coach) getByID(collection string, id string) *Coach {
+// GetByID - Returns a single document based on _id
+func (c Coach) GetByID(collection string, id string) *Coach {
 	var result *Coach
 
-	getByIDCursor(collection, id).Decode(&result)
+	data.GetByIDCursor(collection, id).Decode(&result)
 
 	return result
 }
 
-func (c Coach) create(collection string, coach Coach) *mongo.InsertOneResult {
-	col := getCollection(collection)
+// Create - Inserts a single document
+func (c Coach) Create(collection string, coach Coach) *mongo.InsertOneResult {
+	col := data.GetCollection(collection)
 
 	coach.ID = primitive.NewObjectID()
 	insertResult, err := col.InsertOne(context.TODO(), coach)
@@ -71,8 +76,9 @@ func (c Coach) create(collection string, coach Coach) *mongo.InsertOneResult {
 	return insertResult
 }
 
-func (c Coach) update(collection string, coach Coach) *mongo.UpdateResult {
-	col := getCollection(collection)
+// Update - Replaces a document based on _id
+func (c Coach) Update(collection string, coach Coach) *mongo.UpdateResult {
+	col := data.GetCollection(collection)
 
 	updateResult, err := col.ReplaceOne(context.TODO(), bson.M{"_id": coach.ID}, coach)
 	if err != nil {
@@ -82,8 +88,9 @@ func (c Coach) update(collection string, coach Coach) *mongo.UpdateResult {
 	return updateResult
 }
 
-func (c Coach) delete(collection string, id string) *mongo.DeleteResult {
-	col := getCollection(collection)
+// Delete - Removes a document
+func (c Coach) Delete(collection string, id string) *mongo.DeleteResult {
+	col := data.GetCollection(collection)
 
 	objID, _ := primitive.ObjectIDFromHex(id)
 	deleteResult, err := col.DeleteOne(context.TODO(), bson.M{"_id": objID})

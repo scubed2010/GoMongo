@@ -1,9 +1,11 @@
-package main
+package models
 
 import (
 	"context"
 	"log"
 	"time"
+
+	"../data"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,9 +25,10 @@ type ContentArea struct {
 	Content     string             `json:"Content"`
 }
 
-func (c ContentArea) getAll(collection string) []*ContentArea {
+// GetAll - Gets all documents for the collection
+func (c ContentArea) GetAll(collection string) []*ContentArea {
 	var results []*ContentArea
-	cur := getAllCursor(collection)
+	cur := data.GetAllCursor(collection)
 
 	// Loop Cursor
 	for cur.Next(context.TODO()) {
@@ -48,16 +51,18 @@ func (c ContentArea) getAll(collection string) []*ContentArea {
 	return results
 }
 
-func (c ContentArea) getByID(collection string, id string) *ContentArea {
+// GetByID - Returns a single document based on _id
+func (c ContentArea) GetByID(collection string, id string) *ContentArea {
 	var result *ContentArea
 
-	getByIDCursor(collection, id).Decode(&result)
+	data.GetByIDCursor(collection, id).Decode(&result)
 
 	return result
 }
 
-func (c ContentArea) create(collection string, contentArea ContentArea) *mongo.InsertOneResult {
-	col := getCollection(collection)
+// Create - Inserts a single document
+func (c ContentArea) Create(collection string, contentArea ContentArea) *mongo.InsertOneResult {
+	col := data.GetCollection(collection)
 
 	contentArea.ID = primitive.NewObjectID()
 	insertResult, err := col.InsertOne(context.TODO(), contentArea)
@@ -68,8 +73,9 @@ func (c ContentArea) create(collection string, contentArea ContentArea) *mongo.I
 	return insertResult
 }
 
-func (c ContentArea) update(collection string, contentArea ContentArea) *mongo.UpdateResult {
-	col := getCollection(collection)
+// Update - Replaces a document based on _id
+func (c ContentArea) Update(collection string, contentArea ContentArea) *mongo.UpdateResult {
+	col := data.GetCollection(collection)
 
 	updateResult, err := col.ReplaceOne(context.TODO(), bson.M{"_id": contentArea.ID}, contentArea)
 	if err != nil {
@@ -79,8 +85,9 @@ func (c ContentArea) update(collection string, contentArea ContentArea) *mongo.U
 	return updateResult
 }
 
-func (c ContentArea) delete(collection string, id string) *mongo.DeleteResult {
-	col := getCollection(collection)
+// Delete - Removes a document
+func (c ContentArea) Delete(collection string, id string) *mongo.DeleteResult {
+	col := data.GetCollection(collection)
 
 	objID, _ := primitive.ObjectIDFromHex(id)
 	deleteResult, err := col.DeleteOne(context.TODO(), bson.M{"_id": objID})
